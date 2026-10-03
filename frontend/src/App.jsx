@@ -22,11 +22,47 @@ function App() {
   const inputRef = useRef(null)
   const selectFile = (next) => { if (!next) return; setFile(next); setData(null); setUploadError(null); setStatus('ready') }
   const handleDrop = (event) => { event.preventDefault(); setDragging(false); selectFile(event.dataTransfer.files?.[0]) }
-  const handleUpload = async () => { if (!file) return; setStatus('uploading'); setData(null); setUploadError(null); const formData = new FormData(); formData.append('file', file); try { const res = await axios.post('http://127.0.0.1:8000/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }); setJobId(res.data.job_id); setStatus('processing') } catch (error) { setStatus('failed'); setUploadError(error.response?.data?.detail || 'Unable to connect to the server. Please try again.') } }
-  useEffect(() => { if (status !== 'processing' || !jobId) return undefined; const interval = setInterval(async () => { try { const res = await axios.get(`http://127.0.0.1:8000/api/jobs/${jobId}`); if (['completed', 'failed'].includes(res.data.status)) { setStatus(res.data.status); setData(res.data); clearInterval(interval) } } catch (error) { console.error('Polling Error:', error) } }, 3000); return () => clearInterval(interval) }, [status, jobId])
+  
+  const handleUpload = async () => { 
+    if (!file) return; 
+    setStatus('uploading'); 
+    setData(null); 
+    setUploadError(null); 
+    const formData = new FormData(); 
+    formData.append('file', file); 
+    try { 
+      const res = await axios.post('https://audio-notes-1.onrender.com/api/upload', formData, { 
+        headers: { 'Content-Type': 'multipart/form-data' } 
+      }); 
+      setJobId(res.data.job_id); 
+      setStatus('processing') 
+    } catch (error) { 
+      setStatus('failed'); 
+      setUploadError(error.response?.data?.detail || 'Unable to connect to the server. Please try again.') 
+    } 
+  }
+  
+  useEffect(() => { 
+    if (status !== 'processing' || !jobId) return undefined; 
+    const interval = setInterval(async () => { 
+      try { 
+        const res = await axios.get(`https://audio-notes-1.onrender.com/api/jobs/${jobId}`); 
+        if (['completed', 'failed'].includes(res.data.status)) { 
+          setStatus(res.data.status); 
+          setData(res.data); 
+          clearInterval(interval) 
+        } 
+      } catch (error) { 
+        console.error('Polling Error:', error) 
+      } 
+    }, 3000); 
+    return () => clearInterval(interval) 
+  }, [status, jobId])
+  
   const copyText = async (text, section) => { await navigator.clipboard.writeText(text); setCopied(section); setTimeout(() => setCopied(null), 1800) }
   const isBusy = status === 'uploading' || status === 'processing'
   const buttonText = status === 'uploading' ? 'Uploading audio…' : status === 'processing' ? 'Creating your notes…' : status === 'completed' ? 'Notes generated' : 'Generate notes'
+  
   return <main className="page-wrapper">
     <div className="ambient ambient-one" /><div className="ambient ambient-two" />
     <nav className="topbar"><a className="brand" href="#top"><span className="brand-mark"><Icon name="sparkles" size={18} /></span>notely</a><span className="topbar-label">Audio intelligence</span></nav>
