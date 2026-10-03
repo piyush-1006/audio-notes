@@ -18,3 +18,13 @@ temp/
 chunks/
 *.wav
 *.mp3
+
+# Custom Backend Rules
+backend/venv/
+backend/__pycache__/
+backend/.env
+
+# Custom Frontend Rules
+frontend/node_modules/
+frontend/dist/
+frontend/.env
